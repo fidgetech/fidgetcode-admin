@@ -1,6 +1,6 @@
 import readline from 'readline';
 
-export const question = (query, options) => new Promise((resolve) => {
+const question = (query, options) => new Promise((resolve) => {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   const ask = () => {
     rl.question(query, (answer) => {
@@ -18,3 +18,13 @@ export const question = (query, options) => new Promise((resolve) => {
   };  
   ask();
 });
+
+export const collectInput = async ({ heading, prompts }) => {
+  console.log(`\n*******************\n${heading}:\n`);
+  let results = {};
+  for (const key in prompts) {
+    const prompt = prompts[key];
+    results[key] = await question(prompt.label, prompt.options);
+  }
+  return results;
+}
