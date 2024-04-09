@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "createuser": "node createUser.js",
+    "createtrack": "node createTrack.js",
+    "assigntrack": "node assignTrack.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
