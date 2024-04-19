@@ -1,9 +1,5 @@
-import serviceAccount from './fidgetcode-firebase-service-key.json' assert { type: 'json' };
-import admin from 'firebase-admin';
-import { collectInput } from './helpers.js';
-admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-const auth = admin.auth();
-const db = admin.firestore();
+import { useFirebaseAdmin, getStudent, collectInput } from './helpers.js';
+const { db } = useFirebaseAdmin();
 
 const heading = 'Enter user & track IDs to assign track to user';
 const prompts = {
@@ -12,14 +8,12 @@ const prompts = {
 };
 
 async function assignTrack({ email, trackSyllabus }) {
-  const userAuthRecord = await auth.getUserByEmail(email);
-  const uid = userAuthRecord.uid;
-  const track = await db.collection('tracks').where('syllabus', '==', trackSyllabus).get();
-  const trackId = track.docs[0].id;
-  const existingCustomClaims = userAuthRecord.customClaims || {};
-  const updatedCustomClaims = { ...existingCustomClaims, trackId };
-  await auth.setCustomUserClaims(uid, updatedCustomClaims);
-  console.log(`\n* Track ${trackId} assigned to ${userAuthRecord.email}\n`);
+  const trackSnapshot = await db.collection('tracks').where('syllabus', '==', trackSyllabus).get();
+  const trackId = trackSnapshot.docs[0].id;
+  const student = await getStudent(db, email);
+  const studentRef = db.collection('students').doc(student.id);
+  await studentRef.set({ trackId }, { merge: true });
+  console.log(`\n* Track ${trackId} assigned to ${email}\n`);
 }
 
 const inputs = await collectInput({ heading, prompts });

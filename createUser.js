@@ -1,9 +1,5 @@
-import serviceAccount from './fidgetcode-firebase-service-key.json' assert { type: 'json' };
-import admin from 'firebase-admin';
-import { collectInput } from './helpers.js';
-admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-const auth = admin.auth();
-const db = admin.firestore();
+import { useFirebaseAdmin, collectInput } from './helpers.js';
+const { auth, db, timestamp } = useFirebaseAdmin();
 
 const heading = 'Enter user details';
 const prompts = {
@@ -26,9 +22,9 @@ async function createFirestoreUser({ userRecord, role, email, name }) {
   const uid = userRecord.uid; // // assign Firestore record same uid as in Auth
   const userRef = role === 'admin' ? db.collection('admins').doc(uid) : db.collection('students').doc(uid);
   await userRef.set({
-    createdAt: userRecord.metadata.creationTime,
+    createdAt: timestamp,
     email,
-    name,    
+    name,
   });
   console.log(`\n* ${role} document created for ${userRecord.email}`);
 }

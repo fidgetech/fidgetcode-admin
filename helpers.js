@@ -1,4 +1,29 @@
+import serviceAccount from './fidgetcode-firebase-service-key.json' assert { type: 'json' };
+import admin from 'firebase-admin';
 import readline from 'readline';
+
+export const useFirebaseAdmin = () => {
+  admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+  const usingEmulator = process.argv.includes('--emulator');
+  if (usingEmulator) {
+    console.log('\nUsing auth emulator...');
+    process.env.FIREBASE_AUTH_EMULATOR_HOST = "localhost:9099";
+  }
+  const auth = admin.auth();  
+  const db = admin.firestore();
+  if (usingEmulator) {
+    console.log('Using Firestore emulator...\n');
+    db.settings({ host: 'localhost:8080', ssl: false });
+  }
+  const timestamp = admin.firestore.FieldValue.serverTimestamp()
+  return { auth, db, timestamp };
+}
+
+export const getStudent = async (db, email) => {
+  const studentSnapshot = await db.collection('students').where('email', '==', email).get();
+  const studentDoc = studentSnapshot.docs[0];
+  return { id: studentDoc.id, ...studentDoc.data() };  
+}
 
 const question = (query, options) => new Promise((resolve) => {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -20,7 +45,7 @@ const question = (query, options) => new Promise((resolve) => {
 });
 
 export const collectInput = async ({ heading, prompts }) => {
-  console.log(`\n*******************\n${heading}:\n`);
+  if (heading) console.log(`\n*******************\n${heading}:\n`);
   let results = {};
   for (const key in prompts) {
     const prompt = prompts[key];

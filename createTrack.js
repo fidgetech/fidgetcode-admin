@@ -1,18 +1,16 @@
-import serviceAccount from './fidgetcode-firebase-service-key.json' assert { type: 'json' };
-import admin from 'firebase-admin';
-admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-const db = admin.firestore();
+import { useFirebaseAdmin } from './helpers.js';
+const { db } = useFirebaseAdmin();
 
 const track = {
   title: 'Web Development',
-  syllabus: 'for-now-just-link-to-syllabus-version',
+  syllabus: 'v1',
 };
 
-const courseTitles = [
-  'Introduction to Programming',
-  'Intermedia JavaScript',
-  'React',
-  'C# and .NET',
+const courses = [
+  { title: 'Introduction to Programming', slug: 'intro' },
+  { title: 'Intermediate JavaScript', slug: 'js' },
+  { title: 'React', slug: 'react' },
+  { title: 'C# and .NET', slug: 'c-and-net' },
 ];
 
 const introAssignments = [
@@ -56,15 +54,17 @@ async function createTrack({ title, syllabus }) {
   return trackRef.id;
 };
 
-async function createCourses({ trackId, courseTitles }) {
+async function createCourses({ trackId, courses }) {
   let courseMapping = {};
-  for (const [index, title] of courseTitles.entries()) {
+  for (const [index, course] of courses.entries()) {
+    const { title, slug } = course;
     // courses is subcollection of tracks
     const courseRef = db.collection('tracks').doc(trackId).collection('courses').doc();
     await courseRef.set({
       trackId,
       number: index + 1,
       title,
+      slug,
     });
     courseMapping[title] = courseRef.id;
     console.log(`* Created course: ${title} with id ${courseRef.id}`);
@@ -72,22 +72,24 @@ async function createCourses({ trackId, courseTitles }) {
   return courseMapping;
 }
 
-async function createAssignments({ courseId, assignments }) {
+async function createAssignments({ trackId, courseId, assignments }) {
   for (const [index, assignment] of assignments.entries()) {
     const { title, content, objectives } = assignment;
-    const assignmentRef = db.collection('assignmentTemplates').doc();
+    // assignmentTemplates is subcollection of courses, which is subcollection of tracks
+    const courseRef = db.collection('tracks').doc(trackId).collection('courses').doc(courseId);
+    const assignmentRef = courseRef.collection('assignmentTemplates').doc();
     await assignmentRef.set({
       courseId,
       number: index + 1,
       title,
       content,
-      objectives: objectives.map((objective, index) => ({ number: index + 1, content: objective })),
+      objectives: objectives.map((objective, idx) => ({ number: idx + 1, content: objective })),
     });
-    console.log(`* Created assignment: ${assignment.title} for course ${courseId}`);
+    console.log(`* Created assignment: ${title} for course ${courseId}`);
   }
 }
 
 const trackId = await createTrack(track);
-const courseMapping = await createCourses({ trackId, courseTitles });
-await createAssignments({ courseId: courseMapping['Introduction to Programming'], assignments: introAssignments });
-await createAssignments({ courseId: courseMapping['Intermedia JavaScript'], assignments: jsAssignments });
+const courseMapping = await createCourses({ trackId, courses });
+await createAssignments({ trackId, courseId: courseMapping['Introduction to Programming'], assignments: introAssignments });
+await createAssignments({ trackId, courseId: courseMapping['Intermediate JavaScript'], assignments: jsAssignments });
