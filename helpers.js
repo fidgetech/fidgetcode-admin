@@ -15,6 +15,7 @@ export const useFirebaseAdmin = () => {
     console.log('Using Firestore emulator...\n');
     db.settings({ host: 'localhost:8080', ssl: false });
   }
+  if (!usingEmulator) console.log('\n\n*** WARNING: Not using emulators ***\n\n');
   const timestamp = admin.firestore.FieldValue.serverTimestamp()
   return { auth, db, timestamp };
 }

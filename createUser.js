@@ -5,7 +5,7 @@ const heading = 'Enter user details';
 const prompts = {
   email: { label: 'email: ' },
   name: { label: 'name: ' },
-  role: { label: 'role ("admin" or "student"): ', options: ['admin', 'student'] },
+  role: { label: 'role ("teacher" or "student"): ', options: ['teacher', 'student'] },
 };
 
 async function createAuthUser({ email, role }) {
@@ -20,7 +20,7 @@ async function createAuthUser({ email, role }) {
 
 async function createFirestoreUser({ userRecord, role, email, name }) {
   const uid = userRecord.uid; // // assign Firestore record same uid as in Auth
-  const userRef = role === 'admin' ? db.collection('admins').doc(uid) : db.collection('students').doc(uid);
+  const userRef = role === 'teacher' ? db.collection('teachers').doc(uid) : db.collection('students').doc(uid);
   await userRef.set({
     createdAt: timestamp,
     email,
