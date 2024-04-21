@@ -1,5 +1,5 @@
 import { useFirebaseAdmin } from './helpers.js';
-const { db } = useFirebaseAdmin();
+const { db, timestamp } = useFirebaseAdmin();
 
 const track = {
   title: 'Web Development',
@@ -47,6 +47,7 @@ const jsAssignments = [
 async function createTrack({ title, syllabus }) {
   const trackRef = db.collection('tracks').doc();
   await trackRef.set({
+    createdAt: timestamp,
     title,
     syllabus,
   });
