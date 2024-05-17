@@ -8,6 +8,7 @@
     "createtrack": "node createTrack.js",
     "assigntrack": "node assignTrack.js",
     "assignassignment": "node assignAssignment.js",
+    "createassignment": "node createAssignment.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

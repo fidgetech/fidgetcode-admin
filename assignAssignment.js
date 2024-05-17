@@ -1,18 +1,7 @@
-import { useFirebaseAdmin, getStudent, collectInput } from './helpers.js';
-const { db, timestamp } = useFirebaseAdmin();
+import { useFirebaseAdmin, getStudent, listAssignmentTemplates, collectInput } from './helpers.js';
 
 const emailPrompt = { email: { label: 'Student email: ' } };
 const assignmentIdPrompt = { assignmentId: { label: 'Assignment ID: ' } };
-
-const getAssignmentTemplates = async ({ trackId }) => {
-  const coursesSnapshot = await db.collection('tracks').doc(trackId).collection('courses').get();
-  const assignmentTemplates = await Promise.all(coursesSnapshot.docs.map(courseDoc =>
-    courseDoc.ref.collection('assignmentTemplates').get()
-  )).then(snapshots => 
-    snapshots.flatMap(snapshot => snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })))
-  );
-  return assignmentTemplates;
-}
 
 const assignAssignment = async ({ studentId, assignmentId }) => {
   const assignmentTemplate = assignmentTemplates.find(template => template.id === assignmentId);
@@ -39,8 +28,7 @@ const { email } = await collectInput({ prompts: emailPrompt });
 
 const student = await getStudent(db, email);
 
-const assignmentTemplates = await getAssignmentTemplates({ trackId: student.trackId });
-console.log(assignmentTemplates);
+const assignmentTemplates = await listAssignmentTemplates(db, student.trackId);
 
 const { assignmentId } = await collectInput({ prompts: assignmentIdPrompt });
 await assignAssignment({ studentId: student.id, assignmentId });

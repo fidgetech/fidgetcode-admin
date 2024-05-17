@@ -54,3 +54,27 @@ export const collectInput = async ({ heading, prompts }) => {
   }
   return results;
 }
+
+export const listTracks = async(db) => {
+  const snapshot = await db.collection('tracks').get();
+  snapshot.forEach(doc => {
+    console.log(doc.id, '=>', doc.data());
+  });
+}
+
+export const listCourses = async(db, trackId) => {
+  const snapshot = await db.collection('tracks').doc(trackId).collection('courses').get();
+  snapshot.forEach(doc => {
+    console.log(doc.id, '=>', doc.data());
+  });
+}
+
+export const listAssignmentTemplates = async (db, trackId) => {
+  const coursesSnapshot = await db.collection('tracks').doc(trackId).collection('courses').get();
+  const assignmentTemplates = await Promise.all(coursesSnapshot.docs.map(courseDoc =>
+    courseDoc.ref.collection('assignmentTemplates').get()
+  )).then(snapshots => 
+    snapshots.flatMap(snapshot => snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })))
+  );
+  console.log(assignmentTemplates);
+}

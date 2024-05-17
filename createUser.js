@@ -25,6 +25,7 @@ async function createFirestoreUser({ userRecord, role, email, name }) {
     createdAt: timestamp,
     email,
     name,
+    active: role === 'student',
   });
   console.log(`\n* ${role} document created for ${userRecord.email}`);
 }

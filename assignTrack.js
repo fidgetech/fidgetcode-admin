@@ -1,5 +1,5 @@
 import { useFirebaseAdmin, getStudent, collectInput } from './helpers.js';
-const { db } = useFirebaseAdmin();
+const { auth, db } = useFirebaseAdmin();
 
 const heading = 'Enter user & track IDs to assign track to user';
 const prompts = {
@@ -7,14 +7,27 @@ const prompts = {
   trackSyllabus: { label: 'track syllabus: ' },
 };
 
-async function assignTrack({ email, trackSyllabus }) {
-  const trackSnapshot = await db.collection('tracks').where('syllabus', '==', trackSyllabus).get();
-  const trackId = trackSnapshot.docs[0].id;
+async function getTrackId(db, syllabus) {
+  const trackSnapshot = await db.collection('tracks').where('syllabus', '==', syllabus).get();
+  return trackSnapshot.docs[0].id;
+}
+
+async function assignTrackToUserAuth({ email, trackId }) {
+  const userAuthRecord = await auth.getUserByEmail(email);
+  const uid = userAuthRecord.uid;
+  const existingCustomClaims = userAuthRecord.customClaims || {};
+  await auth.setCustomUserClaims(uid, { ...existingCustomClaims, trackId });
+  console.log(`* Track ${trackId} assigned to ${email} in Auth\n`);
+}
+
+async function assignTrackToUserFirestore({ email, trackId }) {
   const student = await getStudent(db, email);
   const studentRef = db.collection('students').doc(student.id);
   await studentRef.set({ trackId }, { merge: true });
-  console.log(`\n* Track ${trackId} assigned to ${email}\n`);
+  console.log(`* Track ${trackId} assigned to ${email} in Firestore\n`);
 }
 
-const inputs = await collectInput({ heading, prompts });
-await assignTrack(inputs);
+const { email, trackSyllabus } = await collectInput({ heading, prompts });
+const trackId = await getTrackId(db, trackSyllabus);
+await assignTrackToUserAuth({ email, trackId });
+await assignTrackToUserFirestore({ email, trackId });
