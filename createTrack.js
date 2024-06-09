@@ -1,11 +1,11 @@
 import { useFirebaseAdmin } from './helpers.js';
-const { db, timestamp } = useFirebaseAdmin();
+import { getInput } from './cliUtils.js';
+import fs from 'fs';
+import path from 'path';
+import matter from 'gray-matter';
 
-const track = {
-  title: 'Web Development',
-  syllabus: 'v1',
-};
-
+const title = 'Web Development';
+const assignmentsPath = 'independent-projects';
 const courses = [
   { title: 'Introduction to Programming', slug: 'intro' },
   { title: 'Intermediate JavaScript', slug: 'js' },
@@ -13,34 +13,21 @@ const courses = [
   { title: 'C# and .NET', slug: 'c-and-net' },
 ];
 
-const introAssignments = [
+const options = [
   {
-    title: 'Git, HTML and CSS',
-    content: 'Here is some **bolded** markdown content',
-    objectives: [
-      'Understand the basics of Git',
-      'Understand the basics of HTML',
-      'Understand the basics of CSS',
-    ],
+    flag: '--emulator <emulator>',
+    description: 'use Firebase emulators',
+    name: 'emulator',
+    type: 'confirm',
+    message: 'Use Firebase emulators?'
   },
   {
-    title: 'Web Browsers',
-    content: 'Here is some _italicized_ markdown content',
-    objectives: [
-      'Understand the basics of web browsers',
-    ],
-  },
-];
-
-const jsAssignments = [
-  {
-    title: 'JavaScript Basics',
-    content: 'Here is some markdown content with a [link](https://www.example.com)',
-    objectives: [
-      'Understand the basics of JavaScript',
-      'Understand the basics of variables',
-      'Understand the basics of functions',
-    ],
+    flag: '--syllabus <syllabus>',
+    description: 'syllabus version',
+    name: 'syllabus',
+    type: 'input',
+    message: 'Syllabus version',
+    validate: value => value.length > 0 || 'Syllabus version is required'
   },
 ];
 
@@ -51,7 +38,7 @@ async function createTrack({ title, syllabus }) {
     title,
     syllabus,
   });
-  console.log(`\n* Created track: ${title} with id ${trackRef.id}`);
+  console.log(`\n* Created track: ${title} with syllabus ${syllabus} and id ${trackRef.id}`);
   return trackRef.id;
 };
 
@@ -67,7 +54,7 @@ async function createCourses({ trackId, courses }) {
       title,
       slug,
     });
-    courseMapping[title] = courseRef.id;
+    courseMapping[slug] = courseRef.id;
     console.log(`* Created course: ${title} with id ${courseRef.id}`);
   }
   return courseMapping;
@@ -90,7 +77,30 @@ async function createAssignments({ trackId, courseId, assignments }) {
   }
 }
 
+async function readAssignments({ assignmentsPath, courses }) {
+  const directories = courses.map(course => course.slug);
+  let assignments = {};
+  for (const directory of directories) {
+    const markdownPath = path.join(assignmentsPath, directory);
+    const files = fs.readdirSync(markdownPath);
+    assignments[directory] = [];
+    for (const file of files) {
+      const fileContent = fs.readFileSync(`${markdownPath}/${file}`, 'utf8');
+      const { data: { title, objectives }, content } = matter(fileContent);
+      assignments[directory].push({ title, content, objectives });
+    }
+  }
+  return assignments;
+}
+
+const assignments = await readAssignments({ assignmentsPath, courses });
+
+const inputs = await getInput(options);
+const { db, timestamp } = useFirebaseAdmin(inputs);
+
+const track = { title, syllabus: inputs.syllabus };
 const trackId = await createTrack(track);
 const courseMapping = await createCourses({ trackId, courses });
-await createAssignments({ trackId, courseId: courseMapping['Introduction to Programming'], assignments: introAssignments });
-await createAssignments({ trackId, courseId: courseMapping['Intermediate JavaScript'], assignments: jsAssignments });
+for (const [course, courseAssignments] of Object.entries(assignments)) {
+  await createAssignments({ trackId, courseId: courseMapping[course], assignments: courseAssignments });
+}

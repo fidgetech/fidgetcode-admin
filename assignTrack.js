@@ -1,11 +1,31 @@
-import { useFirebaseAdmin, getStudent, collectInput } from './helpers.js';
-const { auth, db } = useFirebaseAdmin();
+import { useFirebaseAdmin, getStudent } from './helpers.js';
+import { getInput } from './cliUtils.js';
 
-const heading = 'Enter user & track IDs to assign track to user';
-const prompts = {
-  email: { label: 'email: ' },
-  trackSyllabus: { label: 'track syllabus: ' },
-};
+const options = [
+  {
+    flag: '--emulator <emulator>',
+    description: 'use Firebase emulators',
+    name: 'emulator',
+    type: 'confirm',
+    message: 'Use Firebase emulators?'
+  },
+  {
+    flag: '--email <email>',
+    description: 'email address',
+    name: 'email',
+    type: 'input',
+    message: 'Email',
+    validate: value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || 'Please enter a valid email address'
+  },
+  {
+    flag: '--track <track>',
+    description: 'track syllabus identifier',
+    name: 'track',
+    type: 'input',
+    message: 'Track syllabus identifier',
+    validate: value => value.length > 0 || 'Track syllabus is required'
+  },
+];
 
 async function getTrackId(db, syllabus) {
   const trackSnapshot = await db.collection('tracks').where('syllabus', '==', syllabus).get();
@@ -27,7 +47,10 @@ async function assignTrackToUserFirestore({ email, trackId }) {
   console.log(`* Track ${trackId} assigned to ${email} in Firestore\n`);
 }
 
-const { email, trackSyllabus } = await collectInput({ heading, prompts });
-const trackId = await getTrackId(db, trackSyllabus);
+const inputs = await getInput(options);
+const { auth, db } = useFirebaseAdmin(inputs);
+const { email, track } = inputs;
+
+const trackId = await getTrackId(db, track);
 await assignTrackToUserAuth({ email, trackId });
 await assignTrackToUserFirestore({ email, trackId });
