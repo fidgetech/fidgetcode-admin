@@ -1,6 +1,6 @@
 // add additional assignment to track
 
-import { useFirebaseAdmin, collectInput, listTracks, listCourses, listAssignmentTemplates } from './helpers.js';
+import { useFirebaseAdmin, collectInput, listTracks, listCourses, listAssignmentTemplates } from '../helpers.js';
 const { db } = useFirebaseAdmin();
 
 const assignment =

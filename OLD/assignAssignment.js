@@ -1,4 +1,4 @@
-import { useFirebaseAdmin, getStudent, listAssignmentTemplates, collectInput } from './helpers.js';
+import { useFirebaseAdmin, getStudent, listAssignmentTemplates, collectInput } from '../helpers.js';
 
 const emailPrompt = { email: { label: 'Student email: ' } };
 const assignmentIdPrompt = { assignmentId: { label: 'Assignment ID: ' } };
