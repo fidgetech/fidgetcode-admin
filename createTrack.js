@@ -60,7 +60,7 @@ async function createCourses({ trackId, courses }) {
   return courseMapping;
 }
 
-async function createAssignments({ trackId, courseId, assignments }) {
+async function createAssignments({ trackId, courseId, courseSlug, assignments }) {
   for (const [index, assignment] of assignments.entries()) {
     const { title, content, objectives } = assignment;
     // assignmentTemplates is subcollection of courses, which is subcollection of tracks
@@ -68,6 +68,7 @@ async function createAssignments({ trackId, courseId, assignments }) {
     const assignmentRef = courseRef.collection('assignmentTemplates').doc();
     await assignmentRef.set({
       courseId,
+      courseSlug,
       number: index + 1,
       title,
       content,
@@ -102,5 +103,10 @@ const track = { title, syllabus: inputs.syllabus };
 const trackId = await createTrack(track);
 const courseMapping = await createCourses({ trackId, courses });
 for (const [course, courseAssignments] of Object.entries(assignments)) {
-  await createAssignments({ trackId, courseId: courseMapping[course], assignments: courseAssignments });
+  await createAssignments({
+    trackId,
+    courseId: courseMapping[course],
+    courseSlug: course,
+    assignments: courseAssignments
+  });
 }
