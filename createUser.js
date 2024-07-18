@@ -30,9 +30,9 @@ const options = [
     description: 'password',
     name: 'password',
     type: 'password',
-    message: 'Password',
+    message: 'Password (leave blank if sending invitation)',
     mask: '*',
-    validate: value => value.length >= 6 || 'Password should be at least 6 characters long'
+    // validate: value => value.length >= 6 || 'Password should be at least 6 characters long'
   },
   {
     flag: '--role <role>',
@@ -45,7 +45,7 @@ const options = [
 ];
 
 async function createAuthUser({ email, password, role }) {
-  const userRecord = await auth.createUser({ email, password });
+  const userRecord = await auth.createUser({ email, ...(password && { password }) });
   console.log(`\n* User created with email: ${userRecord.email}`);
 
   await auth.setCustomUserClaims(userRecord.uid, { role });
@@ -66,6 +66,11 @@ async function createFirestoreUser({ userRecord, role, email, name }) {
   console.log(`\n* ${role} document created for ${userRecord.email}`);
 }
 
+async function generatePasswordResetLink(email) {
+  const link = await auth.generatePasswordResetLink(email)
+  console.log('\n* Password reset link:', link);
+}
+
 const inputs = await getInput(options);
 const { auth, db, timestamp } = useFirebaseAdmin(inputs);
 
@@ -73,8 +78,4 @@ console.log(inputs);
 const userRecord = await createAuthUser(inputs);
 await createFirestoreUser({ ...inputs, userRecord });
 
-// async function generatePasswordResetLink(email) {
-//   const link = await auth.generatePasswordResetLink(email)
-//   console.log('\n* Password reset link:', link);
-// }
-// await generatePasswordResetLink(inputs.email);
+await generatePasswordResetLink(inputs.email);
