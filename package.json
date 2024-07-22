@@ -16,9 +16,14 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "axios": "^1.7.2",
     "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
     "firebase-admin": "^12.0.0",
     "gray-matter": "^4.0.3",
-    "inquirer": "^9.2.23"
+    "inquirer": "^9.2.23",
+    "octokit": "^4.0.2",
+    "slug": "^9.1.0",
+    "uuid": "^10.0.0"
   }
 }

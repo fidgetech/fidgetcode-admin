@@ -14,7 +14,21 @@ npm run assigntrack
 
 ### Usage with CLI arguments
 
-An example to create a teacher and two students, with each student assigned to a different track:
+An example to create a track on production:
+
+```
+npm run createtrack -- --emulator=false --syllabus='v1.2'
+```
+
+
+An example to create a student in production mode assigned to a track with a syllabus of "v1.2":
+
+```
+npm run createuser -- --emulator=false --email='student@fidgetech.org' --name='Student Name' --role='student'
+npm run assigntrack -- --emulator=false --email='student@fidgetech.org' --track='v1.2'
+```
+
+An example to create a teacher and two students in dev mode, with each student assigned to a different track:
 
 ```
 npm run createuser -- --emulator=true --email='teacher@fidgetech.org' --name='Teacher Test' --password='password' --role='teacher'

@@ -66,9 +66,14 @@ async function createFirestoreUser({ userRecord, role, email, name }) {
   console.log(`\n* ${role} document created for ${userRecord.email}`);
 }
 
-async function generatePasswordResetLink(email) {
-  const link = await auth.generatePasswordResetLink(email)
-  console.log('\n* Password reset link:', link);
+// async function generatePasswordResetLink(email) {
+//   const link = await auth.generatePasswordResetLink(email)
+//   console.log('\n* Password reset link:', link);
+// }
+
+async function createCustomToken(uid) {
+  const token = await auth.createCustomToken(uid);
+  console.log('\n* Custom token for invitation link:', token);
 }
 
 const inputs = await getInput(options);
@@ -78,4 +83,5 @@ console.log(inputs);
 const userRecord = await createAuthUser(inputs);
 await createFirestoreUser({ ...inputs, userRecord });
 
-await generatePasswordResetLink(inputs.email);
+// await generatePasswordResetLink(inputs.email);
+await createCustomToken(userRecord.uid);
