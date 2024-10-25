@@ -1,5 +1,6 @@
-import serviceAccount from './fidgetcode-firebase-service-key.json' assert { type: 'json' };
+import fs from 'fs/promises';
 import admin from 'firebase-admin';
+const serviceAccount = JSON.parse(await fs.readFile(new URL('./fidgetcode-firebase-service-key.json', import.meta.url), 'utf-8'));
 
 export const useFirebaseAdmin = ({ emulator }) => {
   admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
